@@ -55,7 +55,8 @@ export async function loadAuth() {
   return { token, user: userStr ? JSON.parse(userStr) : null };
 }
 export async function clearAuth() {
-  await AsyncStorage.multiRemove(["token", "user"]);
+  await AsyncStorage.removeItem("token");
+  await AsyncStorage.removeItem("user");
 }
 
 export const statusColor = sc;
