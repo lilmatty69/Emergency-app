@@ -1,0 +1,129 @@
+{
+  "project_name": "SafeCount",
+  "theme_and_archetype": {
+    "domain": "Emergency Accountability & Safety SaaS",
+    "theme": "Light Theme (Normal) / High-Contrast Warning (Emergency)",
+    "archetype": "Archetype 4 (Swiss & High-Contrast)",
+    "description": "A modern government service aesthetic. Utilitarian, highly readable, trustworthy. Normal mode is calm and clean. Emergency mode shifts dramatically with aggressive warning colors (Red/Orange) to signal urgency. Understandable in 3 seconds."
+  },
+  "typography": {
+    "primary_heading_font": "Work Sans",
+    "secondary_body_font": "IBM Plex Sans",
+    "rules": {
+      "headings": "Bold (700) or ExtraBold (800) for high impact. Tight tracking (tracking-tight) for large headers.",
+      "body": "Regular (400) or Medium (500) for readable lists and cards. Clear line height (leading-relaxed).",
+      "labels": "Uppercase, tracking-widest, text-xs or text-sm for status badges and overlines."
+    },
+    "scale": {
+      "h1_emergency": "text-4xl sm:text-5xl font-extrabold tracking-tighter text-white uppercase",
+      "h1_normal": "text-3xl sm:text-4xl font-bold tracking-tight text-slate-900",
+      "h2": "text-2xl font-bold tracking-tight text-slate-900",
+      "body": "text-base text-slate-700",
+      "small_label": "text-xs font-semibold uppercase tracking-widest text-slate-500"
+    }
+  },
+  "colors": {
+    "normal_mode": {
+      "background": "#FFFFFF",
+      "surface": "#F8FAFC",
+      "text_primary": "#0F172A",
+      "text_secondary": "#475569",
+      "border": "#E2E8F0"
+    },
+    "emergency_mode": {
+      "header_background": "#DC2626",
+      "header_text": "#FFFFFF",
+      "surface_highlight": "#FEF2F2",
+      "warning_accent": "#EA580C"
+    },
+    "status_colors": {
+      "safe": {
+        "hex": "#16A34A",
+        "tailwind": "bg-green-600",
+        "label": "Green = Safe"
+      },
+      "needs_help": {
+        "hex": "#DC2626",
+        "tailwind": "bg-red-600",
+        "label": "Red = Needs help / emergency"
+      },
+      "pending": {
+        "hex": "#EA580C",
+        "tailwind": "bg-orange-600",
+        "label": "Orange = Not responded / pending"
+      },
+      "not_at_location": {
+        "hex": "#2563EB",
+        "tailwind": "bg-blue-600",
+        "label": "Blue = Not at location"
+      },
+      "inactive": {
+        "hex": "#9CA3AF",
+        "tailwind": "bg-gray-400",
+        "label": "Grey = Manually marked or inactive"
+      }
+    }
+  },
+  "spacing_and_layout": {
+    "mobile_first": true,
+    "philosophy": "Generous spacing. Big touch targets. Zero visual clutter.",
+    "containers": "max-w-md mx-auto w-full (for mobile app feel on web).",
+    "cards": "p-6 sm:p-8 rounded-2xl border border-slate-200 bg-white shadow-sm",
+    "buttons": "Large tap areas (min-h-[56px] or h-14), rounded-xl, full width on mobile.",
+    "grids": "grid-cols-1 gap-4 for lists, gap-6 for major sections."
+  },
+  "components": {
+    "Button": {
+      "primary": "bg-slate-900 text-white hover:bg-slate-800 h-14 rounded-xl font-bold text-lg",
+      "emergency_trigger": "bg-red-600 text-white hover:bg-red-700 h-16 rounded-2xl font-black text-xl uppercase tracking-wider shadow-lg animate-pulse-slow",
+      "status_action_safe": "bg-green-600 text-white hover:bg-green-700 h-20 rounded-2xl font-bold text-2xl shadow-md",
+      "status_action_help": "bg-red-600 text-white hover:bg-red-700 h-20 rounded-2xl font-bold text-2xl shadow-md",
+      "status_action_away": "bg-blue-600 text-white hover:bg-blue-700 h-16 rounded-2xl font-bold text-xl shadow-md"
+    },
+    "Card": {
+      "default": "bg-white rounded-2xl border border-slate-200 shadow-sm p-6",
+      "emergency_header": "bg-red-600 rounded-b-3xl text-white pt-12 pb-8 px-6 shadow-md"
+    },
+    "StatusBadge": {
+      "base": "inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider"
+    }
+  },
+  "screens_and_views": {
+    "Normal_Home": {
+      "vibe": "Calm, clean, informative.",
+      "header": "White background, minimal logo, user profile.",
+      "content": "Next drill date, assigned assembly point (e.g., 'Point A - Main Parking')."
+    },
+    "Emergency_Alert": {
+      "vibe": "URGENT, unmistakable, action-oriented.",
+      "header": "Full width deep red banner. Large text: 'EMERGENCY ALERT'.",
+      "content": "Three massive buttons taking up the screen. 1. I AM SAFE (Green). 2. I NEED HELP (Red). 3. NOT AT LOCATION (Blue)."
+    },
+    "Firewatch_Dashboard": {
+      "vibe": "Command center, high data density but clear grouping.",
+      "content": "Top summary stats (X Safe, Y Pending, Z Needs Help). Filterable list of members grouped by status (Red first, then Orange, then Green). Large 'End Alert' button."
+    }
+  },
+  "motion_and_interaction": {
+    "hover_states": "Buttons must have explicit hover and active states (e.g., active:scale-95).",
+    "animations": "Use subtle pulsing (animate-pulse) for the 'Pending' status icon or 'Start Emergency' button to draw attention."
+  },
+  "media": {
+    "image_urls": [
+      {
+        "url": "https://images.unsplash.com/photo-1769441772946-c91a56c00524?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzNzl8MHwxfHNlYXJjaHwyfHx3YXJlaG91c2UlMjBsb2dpc3RpY3MlMjBjZW50ZXIlMjBidWlsZGluZ3xlbnwwfHx8fDE3Nzg1ODUzOTl8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Large brick building with dark roof",
+        "category": "Admin Organization Cover Image (Vilnius Logistics Center)"
+      }
+    ],
+    "icons": "Use lucide-react. Keep icons minimal and bold (e.g., ShieldAlert, CheckCircle, AlertTriangle). No thin or decorative icons."
+  },
+  "instructions_to_main_agent": [
+    "Strictly adhere to the status color hexes provided for all badges and buttons.",
+    "Do not use generic Inter font for headings; use Work Sans.",
+    "Ensure 'Not confirmed safe' is used instead of 'Missing'.",
+    "Design mobile-first. If on web, constrain the main app view to max-w-md or max-w-lg to mimic a mobile app.",
+    "Include data-testid on all buttons and cards.",
+    "In the Emergency view, use a heavy red header that clearly breaks the normal white/grey UI pattern."
+  ]
+}
