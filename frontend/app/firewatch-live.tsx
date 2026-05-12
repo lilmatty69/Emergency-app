@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, Alert, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, Alert, ActivityIndicator, Modal } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -11,6 +11,8 @@ export default function FirewatchLive() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [elapsed, setElapsed] = useState("0:00");
+  const [showEndConfirm, setShowEndConfirm] = useState(false);
+  const [ending, setEnding] = useState(false);
   const pollRef = useRef<any>(null);
 
   const load = useCallback(async () => {
@@ -56,28 +58,21 @@ export default function FirewatchLive() {
     } catch (e: any) { Alert.alert("Failed", e.message); }
   };
 
-  const endAlert = async () => {
-    const summary = data?.summary;
-    const stillUnsafe = summary ? summary.not_responded + summary.needs_help : 0;
-    Alert.alert(
-      "End alert?",
-      stillUnsafe > 0
-        ? `${stillUnsafe} people are still not confirmed safe. End anyway?`
-        : "Are you sure you want to end this alert?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "End alert",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await apiCall(`/alerts/${alertId}/end`, { method: "POST" });
-              router.replace({ pathname: "/firewatch-report", params: { alertId } });
-            } catch (e: any) { Alert.alert("Failed", e.message); }
-          },
-        },
-      ],
-    );
+  const endAlert = () => {
+    setShowEndConfirm(true);
+  };
+
+  const confirmEnd = async () => {
+    setEnding(true);
+    try {
+      await apiCall(`/alerts/${alertId}/end`, { method: "POST" });
+      setShowEndConfirm(false);
+      router.replace({ pathname: "/firewatch-report", params: { alertId } });
+    } catch (e: any) {
+      Alert.alert("Failed", e.message);
+    } finally {
+      setEnding(false);
+    }
   };
 
   if (loading || !data) {
@@ -90,8 +85,59 @@ export default function FirewatchLive() {
   const groups: Record<string, any[]> = { needs_help: [], not_responded: [], not_at_location: [], safe: [], manually_marked_safe: [] };
   members.forEach((m: any) => { (groups[m.status] = groups[m.status] || []).push(m); });
 
+  const stillUnsafe = (summary?.not_responded || 0) + (summary?.needs_help || 0);
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: isDrill ? COLORS.primary : COLORS.emergencyBg }]} edges={["top"]}>
+      <Modal
+        transparent
+        animationType="fade"
+        visible={showEndConfirm}
+        onRequestClose={() => setShowEndConfirm(false)}
+      >
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>End alert?</Text>
+            <Text style={styles.modalText}>
+              {stillUnsafe > 0
+                ? `${stillUnsafe} people are still not confirmed safe. End anyway?`
+                : "Are you sure you want to end this alert?"}
+            </Text>
+            <View style={styles.modalRow}>
+              <View style={styles.modalStatCol}>
+                <Text style={[styles.modalStatNum, { color: COLORS.safe }]}>{summary.safe}</Text>
+                <Text style={styles.modalStatLabel}>Safe</Text>
+              </View>
+              <View style={styles.modalStatCol}>
+                <Text style={[styles.modalStatNum, { color: COLORS.needsHelp }]}>{summary.needs_help}</Text>
+                <Text style={styles.modalStatLabel}>Need help</Text>
+              </View>
+              <View style={styles.modalStatCol}>
+                <Text style={[styles.modalStatNum, { color: COLORS.pending }]}>{summary.not_responded}</Text>
+                <Text style={styles.modalStatLabel}>Not confirmed</Text>
+              </View>
+            </View>
+            <View style={styles.modalBtnRow}>
+              <TouchableOpacity
+                testID="cancel-end"
+                style={[styles.modalBtn, { backgroundColor: COLORS.surface }]}
+                onPress={() => setShowEndConfirm(false)}
+                disabled={ending}
+              >
+                <Text style={[styles.modalBtnText, { color: COLORS.textPrimary }]}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                testID="confirm-end"
+                style={[styles.modalBtn, { backgroundColor: COLORS.emergencyBg }]}
+                onPress={confirmEnd}
+                disabled={ending}
+              >
+                {ending ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.modalBtnText}>End alert</Text>}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
       <View style={styles.topBar}>
         <TouchableOpacity testID="back-btn" onPress={() => router.replace("/firewatch")} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
@@ -199,4 +245,15 @@ const styles = StyleSheet.create({
   memberName: { fontSize: 14, fontWeight: "700", color: COLORS.textPrimary },
   memberMeta: { fontSize: 11, color: COLORS.textSecondary, marginTop: 2 },
   actions: { flexDirection: "row", gap: 12, alignItems: "center" },
+  modalBackdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.55)", alignItems: "center", justifyContent: "center", padding: 24 },
+  modalCard: { width: "100%", maxWidth: 420, backgroundColor: "#FFFFFF", borderRadius: 20, padding: 22 },
+  modalTitle: { fontSize: 22, fontWeight: "800", color: COLORS.textPrimary },
+  modalText: { fontSize: 14, color: COLORS.textSecondary, marginTop: 8, lineHeight: 20 },
+  modalRow: { flexDirection: "row", justifyContent: "space-around", marginTop: 18, padding: 14, backgroundColor: COLORS.surface, borderRadius: 14 },
+  modalStatCol: { alignItems: "center" },
+  modalStatNum: { fontSize: 24, fontWeight: "800" },
+  modalStatLabel: { fontSize: 11, color: COLORS.textSecondary, marginTop: 2, textTransform: "uppercase", letterSpacing: 0.6, fontWeight: "700" },
+  modalBtnRow: { flexDirection: "row", gap: 10, marginTop: 18 },
+  modalBtn: { flex: 1, height: 52, borderRadius: 14, alignItems: "center", justifyContent: "center" },
+  modalBtnText: { color: "#FFFFFF", fontSize: 15, fontWeight: "800" },
 });
