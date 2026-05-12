@@ -45,7 +45,8 @@ export default function RoleSelect() {
             <Text style={styles.name} testID="user-name">{user?.name || ""}</Text>
           </View>
           <TouchableOpacity onPress={logout} testID="logout-btn" style={styles.logoutBtn}>
-            <Ionicons name="log-out-outline" size={22} color={COLORS.textPrimary} />
+            <Ionicons name="log-out-outline" size={20} color="#FFFFFF" />
+            <Text style={styles.logoutText}>Log out</Text>
           </TouchableOpacity>
         </View>
 
@@ -53,7 +54,7 @@ export default function RoleSelect() {
         <Text style={styles.sub}>Pick how you want to use SafeCount right now.</Text>
 
         <View style={styles.cards}>
-          {ROLES.filter((r) => available.includes(r.key) || available.length === 0).map((r) => (
+          {ROLES.map((r) => (
             <TouchableOpacity
               key={r.key}
               testID={`role-${r.key}`}
@@ -83,7 +84,8 @@ const styles = StyleSheet.create({
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 32 },
   hello: { fontSize: 13, color: COLORS.textSecondary, letterSpacing: 0.5, textTransform: "uppercase", fontWeight: "600" },
   name: { fontSize: 22, fontWeight: "800", color: COLORS.textPrimary, marginTop: 2 },
-  logoutBtn: { width: 44, height: 44, borderRadius: 12, borderWidth: 1.5, borderColor: COLORS.border, alignItems: "center", justifyContent: "center" },
+  logoutBtn: { flexDirection: "row", alignItems: "center", gap: 6, height: 40, paddingHorizontal: 14, borderRadius: 12, backgroundColor: COLORS.primary },
+  logoutText: { color: "#FFFFFF", fontSize: 14, fontWeight: "700" },
   title: { fontSize: 28, fontWeight: "800", color: COLORS.textPrimary, letterSpacing: -0.5 },
   sub: { fontSize: 15, color: COLORS.textSecondary, marginTop: 6, marginBottom: 24 },
   cards: { gap: 12 },

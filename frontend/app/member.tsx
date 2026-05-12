@@ -18,9 +18,6 @@ export default function MemberHome() {
         apiCall("/alerts/active"),
       ]);
       setInfo({ team, active });
-      if (active && active.status === "active") {
-        router.push({ pathname: "/member-alert", params: { alertId: active.id } });
-      }
     } catch (e) {
       console.warn(e);
     } finally {
@@ -54,10 +51,27 @@ export default function MemberHome() {
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll}>
-        <View style={styles.calmCard}>
-          <View style={styles.greenDot} />
-          <Text style={styles.calmText}>All clear · No active emergencies</Text>
-        </View>
+        {info?.active && info.active.status === "active" ? (
+          <TouchableOpacity
+            testID="active-alert-banner"
+            style={styles.alertBanner}
+            onPress={() => router.push({ pathname: "/member-alert", params: { alertId: info.active.id } })}
+          >
+            <Ionicons name="warning" size={22} color="#FFFFFF" />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.alertBannerTitle}>Active alert — tap to respond</Text>
+              <Text style={styles.alertBannerSub}>
+                {info.active.mode === "drill" ? "Drill" : "Emergency"} · {info.active.type.replace("_", " ")}
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#FFFFFF" />
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.calmCard}>
+            <View style={styles.greenDot} />
+            <Text style={styles.calmText}>All clear · No active emergencies</Text>
+          </View>
+        )}
 
         <View style={styles.bigCard}>
           <Text style={styles.smLabel}>Organization</Text>
@@ -116,6 +130,9 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 18, fontWeight: "700", color: COLORS.textPrimary },
   scroll: { padding: 20, paddingBottom: 40 },
   calmCard: { flexDirection: "row", alignItems: "center", gap: 10, padding: 14, backgroundColor: "#ECFDF5", borderRadius: 14, borderWidth: 1, borderColor: "#A7F3D0" },
+  alertBanner: { flexDirection: "row", alignItems: "center", gap: 12, padding: 16, backgroundColor: COLORS.emergencyBg, borderRadius: 14 },
+  alertBannerTitle: { color: "#FFFFFF", fontSize: 15, fontWeight: "800" },
+  alertBannerSub: { color: "#FFFFFF", fontSize: 12, opacity: 0.9, marginTop: 2, textTransform: "capitalize" },
   greenDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: COLORS.safe },
   calmText: { fontSize: 14, fontWeight: "700", color: "#065F46" },
   bigCard: { padding: 22, backgroundColor: "#FFFFFF", borderRadius: 18, borderWidth: 1.5, borderColor: COLORS.border, marginTop: 16 },

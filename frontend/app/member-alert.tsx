@@ -75,6 +75,14 @@ export default function MemberAlert() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: COLORS.emergencyBg }]} edges={["top", "bottom"]}>
       <View style={styles.banner}>
+        <TouchableOpacity
+          testID="back-btn"
+          onPress={() => router.replace("/member")}
+          style={styles.bannerBack}
+        >
+          <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
+          <Text style={styles.bannerBackText}>Back</Text>
+        </TouchableOpacity>
         {isDrill ? <Text style={styles.drillBadge}>DRILL · PRACTICE</Text> : null}
         <Text style={styles.bannerTitle}>EMERGENCY ALERT</Text>
         <Text style={styles.bannerType}>
@@ -244,7 +252,9 @@ function DoneCard({ icon, color, title, subtitle, onUpdate }: any) {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   center: { alignItems: "center", justifyContent: "center" },
-  banner: { padding: 24, paddingTop: 16 },
+  banner: { padding: 24, paddingTop: 12 },
+  bannerBack: { flexDirection: "row", alignItems: "center", gap: 6, alignSelf: "flex-start", paddingVertical: 8, paddingRight: 14, marginBottom: 8 },
+  bannerBackText: { color: "#FFFFFF", fontSize: 14, fontWeight: "700" },
   drillBadge: { color: "#FFFFFF", fontSize: 11, fontWeight: "800", letterSpacing: 1.5, opacity: 0.85, marginBottom: 6 },
   bannerTitle: { color: "#FFFFFF", fontSize: 34, fontWeight: "900", letterSpacing: -0.5 },
   bannerType: { color: "#FFFFFF", fontSize: 14, fontWeight: "700", marginTop: 6, opacity: 0.95, letterSpacing: 0.5 },

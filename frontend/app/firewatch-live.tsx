@@ -93,7 +93,10 @@ export default function FirewatchLive() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: isDrill ? COLORS.primary : COLORS.emergencyBg }]} edges={["top"]}>
       <View style={styles.topBar}>
-        <View>
+        <TouchableOpacity testID="back-btn" onPress={() => router.replace("/firewatch")} style={styles.backBtn}>
+          <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
+        </TouchableOpacity>
+        <View style={{ flex: 1, marginLeft: 12 }}>
           <Text style={styles.modeLabel}>{isDrill ? "DRILL · " : "EMERGENCY · "}{a.type.toUpperCase().replace("_", " ")}</Text>
           <Text style={styles.elapsed} testID="elapsed">{elapsed}</Text>
         </View>
@@ -172,7 +175,8 @@ function SummaryCard({ label, value, color, testID }: any) {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   center: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: COLORS.bg },
-  topBar: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 20, paddingVertical: 14 },
+  topBar: { flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 14 },
+  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: "rgba(0,0,0,0.25)", alignItems: "center", justifyContent: "center" },
   modeLabel: { color: "#FFFFFF", fontSize: 11, fontWeight: "800", letterSpacing: 1.2, opacity: 0.85 },
   elapsed: { color: "#FFFFFF", fontSize: 28, fontWeight: "800", letterSpacing: -0.5, marginTop: 2 },
   endBtn: { paddingHorizontal: 18, paddingVertical: 10, backgroundColor: "rgba(0,0,0,0.25)", borderRadius: 999 },
