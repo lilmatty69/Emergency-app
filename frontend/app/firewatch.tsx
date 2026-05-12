@@ -68,6 +68,25 @@ export default function FirewatchDashboard() {
               <Meta icon="time-outline" text={`Drill: ${formatRel(t.last_drill_at)}`} />
             </View>
 
+            <TouchableOpacity
+              testID={`show-code-${t.id}`}
+              style={styles.inviteCard}
+              onPress={() => router.push({ pathname: "/team-code", params: { teamId: t.id } })}
+              activeOpacity={0.9}
+            >
+              <View style={styles.inviteIcon}>
+                <Ionicons name="qr-code" size={22} color={C.accent} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.inviteLabel}>TEAM INVITE</Text>
+                <Text style={styles.inviteCode}>
+                  {t.join_code ? String(t.join_code).replace(/(\d{3})(\d{3})/, "$1 $2") : "—"}
+                </Text>
+                <Text style={styles.inviteHint}>Tap to show QR · share to invite</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={C.accent} />
+            </TouchableOpacity>
+
             {t.active_alert_id ? (
               <TouchableOpacity
                 testID={`open-live-${t.id}`}
@@ -160,6 +179,26 @@ const styles = StyleSheet.create({
   teamMeta: { flexDirection: "row", flexWrap: "wrap", gap: 14, paddingHorizontal: 18, paddingBottom: 14 },
   metaItem: { flexDirection: "row", alignItems: "center", gap: 6 },
   metaText: { fontSize: 12, color: C.textSub, fontWeight: "500" },
+
+  codeBtn: {
+    flexDirection: "row", alignItems: "center", gap: 8,
+    marginHorizontal: 14, marginBottom: 10,
+    paddingHorizontal: 14, paddingVertical: 12,
+    backgroundColor: C.accentSoft, borderRadius: RADIUS.md,
+    borderWidth: 1, borderColor: "#DFE2FF",
+  },
+  codeBtnText: { flex: 1, fontSize: 13, fontWeight: "700", color: C.accent },
+  inviteCard: {
+    flexDirection: "row", alignItems: "center", gap: 12,
+    marginHorizontal: 14, marginBottom: 12,
+    padding: 12, paddingRight: 14,
+    backgroundColor: C.accentSoft, borderRadius: RADIUS.md,
+    borderWidth: 1, borderColor: "#DFE2FF",
+  },
+  inviteIcon: { width: 44, height: 44, borderRadius: 12, backgroundColor: "#FFFFFF", alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "#DFE2FF" },
+  inviteLabel: { ...TYPE.label, color: C.accent, fontSize: 9 },
+  inviteCode: { fontSize: 20, fontWeight: "900", color: C.text, letterSpacing: 4, marginTop: 1, fontVariant: ["tabular-nums"] },
+  inviteHint: { fontSize: 11, color: C.textMuted, marginTop: 2, fontWeight: "500" },
 
   btnRow: { flexDirection: "row", gap: 10, padding: 14, paddingTop: 0 },
   actionBtn: {

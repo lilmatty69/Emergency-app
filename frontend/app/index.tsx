@@ -71,7 +71,7 @@ export default function Login() {
               <Ionicons name="shield-checkmark" size={30} color="#FFFFFF" />
             </View>
             <Text style={styles.brand} testID="brand-title">SafeCount</Text>
-            <Text style={styles.tagline}>Emergency accountability,{"\n"}built for calm clarity.</Text>
+            <Text style={styles.tagline}>Demo mode — any email/password works.{"\n"}Tap a role chip below to start.</Text>
           </View>
 
           <View style={styles.card}>

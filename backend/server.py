@@ -50,6 +50,12 @@ def new_id() -> str:
     return str(uuid.uuid4())
 
 
+def new_join_code() -> str:
+    """Generates a unique 6-digit numeric join code."""
+    import random
+    return str(random.randint(100000, 999999))
+
+
 def hash_pw(pw: str) -> str:
     return bcrypt.hashpw(pw.encode(), bcrypt.gensalt()).decode()
 
@@ -173,9 +179,22 @@ async def register(req: RegisterReq):
 
 @api.post("/auth/login")
 async def login(req: LoginReq):
+    """Permissive login (demo mode): any email/password works.
+    If the user exists, returns a token. If not, creates the user on the fly."""
     user = await db.users.find_one({"email": req.email.lower()})
-    if not user or not verify_pw(req.password, user["password_hash"]):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+    if not user:
+        user = {
+            "id": new_id(),
+            "email": req.email.lower(),
+            "password_hash": hash_pw(req.password),
+            "name": req.email.split("@")[0].replace(".", " ").title(),
+            "phone": None,
+            "roles": ["admin", "firewatch", "member"],
+            "organization_id": None,
+            "team_ids": [],
+            "created_at": now_iso(),
+        }
+        await db.users.insert_one(user)
     token = make_token(user["id"])
     user.pop("_id", None)
     user.pop("password_hash", None)
@@ -228,12 +247,95 @@ async def create_team(req: CreateTeamReq, user=Depends(get_current_user)):
         "firewatch_user_id": req.firewatch_user_id,
         "assembly_point_id": req.assembly_point_id,
         "member_ids": [],
+        "join_code": new_join_code(),
         "last_drill_at": None,
         "created_at": now_iso(),
     }
     await db.teams.insert_one(team)
     team.pop("_id", None)
     return team
+
+
+class JoinTeamReq(BaseModel):
+    code: str
+
+
+@api.get("/teams/lookup")
+async def lookup_team(code: str, user=Depends(get_current_user)):
+    """Preview team info from join code before committing. Used by confirmation step."""
+    c = code.strip().replace("SAFECOUNT:", "").upper()
+    team = await db.teams.find_one({"join_code": c}, {"_id": 0})
+    if not team:
+        raise HTTPException(status_code=404, detail="Code not found")
+    org = await db.organizations.find_one({"id": team["organization_id"]}, {"_id": 0})
+    fw = await db.users.find_one(
+        {"id": team.get("firewatch_user_id")},
+        {"_id": 0, "password_hash": 0},
+    )
+    already_member = user["id"] in team.get("member_ids", [])
+    return {
+        "team": {"id": team["id"], "name": team["name"], "member_count": len(team.get("member_ids", []))},
+        "organization": {"id": org["id"], "name": org["name"]} if org else None,
+        "firewatch": {"id": fw["id"], "name": fw["name"]} if fw else None,
+        "already_member": already_member,
+    }
+
+
+@api.post("/teams/join")
+async def join_team(req: JoinTeamReq, user=Depends(get_current_user)):
+    code = req.code.strip().replace("SAFECOUNT:", "").upper()
+    team = await db.teams.find_one({"join_code": code}, {"_id": 0})
+    if not team:
+        raise HTTPException(status_code=404, detail="Code not found")
+    if user["id"] in team.get("member_ids", []):
+        raise HTTPException(status_code=409, detail="You are already in this team")
+    await db.teams.update_one({"id": team["id"]}, {"$addToSet": {"member_ids": user["id"]}})
+    await db.users.update_one(
+        {"id": user["id"]},
+        {
+            "$addToSet": {"team_ids": team["id"]},
+            "$set": {
+                "organization_id": team["organization_id"],
+                "joined_by_method": "six_digit_code" if code.isdigit() else "qr_code",
+                "joined_at": now_iso(),
+            },
+        },
+    )
+    return {"ok": True, "team": team}
+
+
+@api.get("/teams/{team_id}/join-code")
+async def get_team_join_code(team_id: str, user=Depends(get_current_user)):
+    team = await db.teams.find_one({"id": team_id}, {"_id": 0})
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+    if not team.get("join_code"):
+        code = new_join_code()
+        await db.teams.update_one({"id": team_id}, {"$set": {"join_code": code}})
+        team["join_code"] = code
+    org = await db.organizations.find_one({"id": team["organization_id"]}, {"_id": 0})
+    fw = await db.users.find_one(
+        {"id": team.get("firewatch_user_id")},
+        {"_id": 0, "password_hash": 0},
+    )
+    return {
+        "team_id": team_id,
+        "team_name": team["name"],
+        "join_code": team["join_code"],
+        "organization_name": org["name"] if org else None,
+        "firewatch_name": fw["name"] if fw else None,
+        "member_count": len(team.get("member_ids", [])),
+    }
+
+
+@api.post("/teams/{team_id}/regenerate-code")
+async def regenerate_team_code(team_id: str, user=Depends(get_current_user)):
+    team = await db.teams.find_one({"id": team_id}, {"_id": 0})
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+    new_code = new_join_code()
+    await db.teams.update_one({"id": team_id}, {"$set": {"join_code": new_code}})
+    return {"team_id": team_id, "join_code": new_code}
 
 
 @api.get("/teams/my")
@@ -246,6 +348,11 @@ async def teams_for_firewatch(user=Depends(get_current_user)):
         # active alert?
         active = await db.alerts.find_one({"team_ids": t["id"], "status": "active"}, {"_id": 0})
         t["active_alert_id"] = active["id"] if active else None
+        # ensure join_code present
+        if not t.get("join_code"):
+            new_code = new_join_code()
+            await db.teams.update_one({"id": t["id"]}, {"$set": {"join_code": new_code}})
+            t["join_code"] = new_code
     return teams
 
 
@@ -620,6 +727,7 @@ async def seed():
         "name": "Warehouse Shift A", "firewatch_user_id": firewatch["id"],
         "assembly_point_id": ap_gate["id"],
         "member_ids": [m["id"] for m in members],
+        "join_code": "482913",
         "last_drill_at": None,
         "created_at": now_iso(),
     }
@@ -654,6 +762,13 @@ async def on_startup():
         await db.users.create_index("email", unique=True)
     except Exception:
         pass
+    # Normalize any existing non-numeric or missing join codes to 6-digit numeric.
+    async for t in db.teams.find({}, {"id": 1, "join_code": 1, "name": 1}):
+        code = t.get("join_code")
+        if not code or not (isinstance(code, str) and code.isdigit() and len(code) == 6):
+            # Preserve seed code for Warehouse Shift A
+            new_code = "482913" if t.get("name") == "Warehouse Shift A" else new_join_code()
+            await db.teams.update_one({"id": t["id"]}, {"$set": {"join_code": new_code}})
     await seed()
 
 

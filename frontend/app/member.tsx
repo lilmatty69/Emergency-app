@@ -35,6 +35,7 @@ export default function MemberHome() {
   const ap = info?.team?.assembly_point;
   const org = info?.team?.organization;
   const active = info?.active && info.active.status === "active" ? info.active : null;
+  const hasTeam = !!team;
 
   return (
     <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
@@ -47,7 +48,23 @@ export default function MemberHome() {
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll}>
-        {active ? (
+        {!hasTeam ? (
+          <TouchableOpacity
+            testID="join-team-banner"
+            style={styles.joinBanner}
+            onPress={() => router.push("/join-team")}
+            activeOpacity={0.92}
+          >
+            <View style={styles.joinIcon}>
+              <Ionicons name="qr-code" size={26} color="#FFFFFF" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.joinTitle}>Join your team</Text>
+              <Text style={styles.joinSub}>Scan QR or enter code from your Firewatch</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={C.accent} />
+          </TouchableOpacity>
+        ) : active ? (
           <TouchableOpacity
             testID="active-alert-banner"
             style={styles.alertBanner}
@@ -84,6 +101,18 @@ export default function MemberHome() {
           <Divider />
           <Row label="Assembly point" value={ap?.name || "—"} icon="location-outline" sub={ap?.description} testID="assembly-name" />
         </View>
+
+        {hasTeam ? (
+          <TouchableOpacity
+            testID="rejoin-btn"
+            style={styles.rejoinBtn}
+            onPress={() => router.push("/join-team")}
+            activeOpacity={0.85}
+          >
+            <Ionicons name="swap-horizontal-outline" size={16} color={C.textSub} />
+            <Text style={styles.rejoinText}>Join a different team</Text>
+          </TouchableOpacity>
+        ) : null}
 
         <View style={styles.tipsCard}>
           <View style={styles.tipsHeader}>
@@ -152,6 +181,16 @@ const styles = StyleSheet.create({
     padding: 16, backgroundColor: C.surface, borderRadius: RADIUS.lg,
     borderWidth: 1, borderColor: C.border, ...(SHADOW.sm as any),
   },
+  joinBanner: {
+    flexDirection: "row", alignItems: "center", gap: 12,
+    padding: 16, backgroundColor: C.accentSoft, borderRadius: RADIUS.lg,
+    borderWidth: 1, borderColor: "#DFE2FF",
+  },
+  joinIcon: { width: 48, height: 48, borderRadius: 14, backgroundColor: C.accent, alignItems: "center", justifyContent: "center" },
+  joinTitle: { ...TYPE.h3, fontSize: 16, color: C.text },
+  joinSub: { fontSize: 12, color: C.textSub, marginTop: 2 },
+  rejoinBtn: { flexDirection: "row", alignSelf: "center", alignItems: "center", gap: 6, marginTop: 14, paddingVertical: 10, paddingHorizontal: 14 },
+  rejoinText: { fontSize: 13, color: C.textSub, fontWeight: "600" },
   calmDot: { width: 32, height: 32, borderRadius: 16, backgroundColor: "#ECFDF5", alignItems: "center", justifyContent: "center" },
   calmDotInner: { width: 10, height: 10, borderRadius: 5, backgroundColor: C.safe },
   calmText: { ...TYPE.h3, color: C.text, fontSize: 16 },
