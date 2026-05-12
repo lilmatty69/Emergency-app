@@ -6,7 +6,9 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { COLORS, apiCall, saveAuth, loadAuth } from "../src/api";
+import { LinearGradient } from "expo-linear-gradient";
+import { apiCall, saveAuth, loadAuth } from "../src/api";
+import { C, RADIUS, SHADOW, TYPE } from "../src/theme";
 
 export default function Login() {
   const router = useRouter();
@@ -24,10 +26,7 @@ export default function Login() {
   }, []);
 
   const submit = async () => {
-    if (!email || !password) {
-      Alert.alert("Missing fields", "Please enter email and password.");
-      return;
-    }
+    if (!email || !password) { Alert.alert("Missing fields", "Please enter email and password."); return; }
     setLoading(true);
     try {
       const data = await apiCall("/auth/login", { method: "POST", body: { email, password }, auth: false });
@@ -35,97 +34,102 @@ export default function Login() {
       router.replace("/role-select");
     } catch (e: any) {
       Alert.alert("Login failed", e.message || "Invalid credentials");
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
   const fillDemo = (role: "admin" | "firewatch" | "member") => {
-    const map = {
-      admin: "admin@safecount.demo",
-      firewatch: "jonas@safecount.demo",
-      member: "ruta@safecount.demo",
-    };
-    setEmail(map[role]);
-    setPassword("Demo1234");
+    const map = { admin: "admin@safecount.demo", firewatch: "jonas@safecount.demo", member: "ruta@safecount.demo" };
+    setEmail(map[role]); setPassword("Demo1234");
   };
 
   if (bootChecking) {
-    return (
-      <SafeAreaView style={styles.center}>
-        <ActivityIndicator color={COLORS.primary} />
-      </SafeAreaView>
-    );
+    return <SafeAreaView style={styles.center}><ActivityIndicator color={C.accent} /></SafeAreaView>;
   }
 
   return (
     <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={{ flex: 1 }}
-      >
+      {/* Soft accent gradient hero backdrop */}
+      <View style={styles.heroBg} pointerEvents="none">
+        <LinearGradient
+          colors={["#EEF0FF", "#FAFAFB"]}
+          style={StyleSheet.absoluteFill}
+          start={{ x: 0.2, y: 0 }} end={{ x: 1, y: 1 }}
+        />
+        <View style={styles.glowA} />
+        <View style={styles.glowB} />
+      </View>
+
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           <View style={styles.logoWrap}>
             <View style={styles.logoBadge}>
-              <Ionicons name="shield-checkmark" size={32} color="#FFFFFF" />
+              <LinearGradient
+                colors={["#5B5BF5", "#7C3AED"]}
+                style={StyleSheet.absoluteFill}
+                start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+              />
+              <Ionicons name="shield-checkmark" size={30} color="#FFFFFF" />
             </View>
             <Text style={styles.brand} testID="brand-title">SafeCount</Text>
-            <Text style={styles.tagline}>Emergency accountability for your organization.</Text>
+            <Text style={styles.tagline}>Emergency accountability,{"\n"}built for calm clarity.</Text>
           </View>
 
-          <View style={styles.form}>
+          <View style={styles.card}>
             <Text style={styles.label}>Email or phone</Text>
-            <TextInput
-              testID="login-email"
-              style={styles.input}
-              value={email}
-              onChangeText={setEmail}
-              autoCapitalize="none"
-              keyboardType="email-address"
-              placeholder="you@organization.com"
-              placeholderTextColor="#94A3B8"
-            />
-            <Text style={styles.label}>Password</Text>
-            <TextInput
-              testID="login-password"
-              style={styles.input}
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              placeholder="••••••••"
-              placeholderTextColor="#94A3B8"
-            />
+            <View style={styles.inputWrap}>
+              <Ionicons name="mail-outline" size={18} color={C.textMuted} />
+              <TextInput
+                testID="login-email"
+                style={styles.input}
+                value={email} onChangeText={setEmail}
+                autoCapitalize="none" keyboardType="email-address"
+                placeholder="you@organization.com" placeholderTextColor={C.textMuted}
+              />
+            </View>
+
+            <Text style={[styles.label, { marginTop: 14 }]}>Password</Text>
+            <View style={styles.inputWrap}>
+              <Ionicons name="lock-closed-outline" size={18} color={C.textMuted} />
+              <TextInput
+                testID="login-password"
+                style={styles.input}
+                value={password} onChangeText={setPassword}
+                secureTextEntry placeholder="••••••••" placeholderTextColor={C.textMuted}
+              />
+            </View>
+
             <TouchableOpacity
               testID="login-submit"
-              style={[styles.btnPrimary, loading && { opacity: 0.6 }]}
-              onPress={submit}
-              disabled={loading}
+              style={[styles.cta, loading && { opacity: 0.7 }]}
+              onPress={submit} disabled={loading} activeOpacity={0.9}
             >
-              {loading ? (
-                <ActivityIndicator color="#FFFFFF" />
-              ) : (
-                <Text style={styles.btnPrimaryText}>Log in</Text>
+              <LinearGradient
+                colors={["#0B1020", "#1F2547"]}
+                style={StyleSheet.absoluteFill}
+                start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+              />
+              {loading ? <ActivityIndicator color="#FFFFFF" /> : (
+                <>
+                  <Text style={styles.ctaText}>Log in</Text>
+                  <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
+                </>
               )}
             </TouchableOpacity>
+          </View>
 
+          <View style={styles.demoSection}>
             <View style={styles.divider}>
               <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>DEMO ACCOUNTS</Text>
+              <Text style={styles.dividerText}>QUICK DEMO ACCESS</Text>
               <View style={styles.dividerLine} />
             </View>
 
             <View style={styles.demoRow}>
-              <TouchableOpacity testID="demo-admin" style={styles.demoChip} onPress={() => fillDemo("admin")}>
-                <Text style={styles.demoChipText}>Admin</Text>
-              </TouchableOpacity>
-              <TouchableOpacity testID="demo-firewatch" style={styles.demoChip} onPress={() => fillDemo("firewatch")}>
-                <Text style={styles.demoChipText}>Firewatch</Text>
-              </TouchableOpacity>
-              <TouchableOpacity testID="demo-member" style={styles.demoChip} onPress={() => fillDemo("member")}>
-                <Text style={styles.demoChipText}>Member</Text>
-              </TouchableOpacity>
+              <DemoChip testID="demo-admin" label="Admin" icon="settings-outline" onPress={() => fillDemo("admin")} />
+              <DemoChip testID="demo-firewatch" label="Firewatch" icon="shield-checkmark-outline" onPress={() => fillDemo("firewatch")} accent />
+              <DemoChip testID="demo-member" label="Member" icon="person-outline" onPress={() => fillDemo("member")} />
             </View>
-            <Text style={styles.demoHint}>Tap a role to autofill, then press Log in.</Text>
+            <Text style={styles.demoHint}>Tap a role to autofill, then Log in.</Text>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -133,36 +137,56 @@ export default function Login() {
   );
 }
 
+function DemoChip({ testID, label, icon, onPress, accent }: any) {
+  return (
+    <TouchableOpacity testID={testID} style={[styles.chip, accent && styles.chipAccent]} onPress={onPress} activeOpacity={0.85}>
+      <Ionicons name={icon} size={18} color={accent ? "#FFFFFF" : C.text} />
+      <Text style={[styles.chipText, accent && { color: "#FFFFFF" }]}>{label}</Text>
+    </TouchableOpacity>
+  );
+}
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.bg },
-  scroll: { padding: 24, paddingTop: 32, flexGrow: 1 },
-  center: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: COLORS.bg },
-  logoWrap: { alignItems: "center", marginTop: 32, marginBottom: 40 },
+  container: { flex: 1, backgroundColor: C.bg },
+  center: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: C.bg },
+  heroBg: { ...StyleSheet.absoluteFillObject, overflow: "hidden" },
+  glowA: { position: "absolute", top: -120, right: -60, width: 300, height: 300, borderRadius: 150, backgroundColor: "rgba(91,91,245,0.18)" },
+  glowB: { position: "absolute", top: 40, left: -80, width: 260, height: 260, borderRadius: 130, backgroundColor: "rgba(124,58,237,0.10)" },
+  scroll: { padding: 24, paddingTop: 40, flexGrow: 1 },
+  logoWrap: { alignItems: "center", marginTop: 24, marginBottom: 32 },
   logoBadge: {
-    width: 64, height: 64, borderRadius: 18, backgroundColor: COLORS.primary,
-    alignItems: "center", justifyContent: "center", marginBottom: 16,
+    width: 68, height: 68, borderRadius: 20, overflow: "hidden",
+    alignItems: "center", justifyContent: "center", marginBottom: 18,
+    ...(SHADOW.md as any),
   },
-  brand: { fontSize: 32, fontWeight: "800", color: COLORS.textPrimary, letterSpacing: -0.5 },
-  tagline: { fontSize: 15, color: COLORS.textSecondary, marginTop: 6, textAlign: "center" },
-  form: { gap: 6 },
-  label: { fontSize: 12, fontWeight: "700", color: COLORS.textSecondary, marginTop: 12, letterSpacing: 0.5, textTransform: "uppercase" },
-  input: {
-    height: 52, borderWidth: 1.5, borderColor: COLORS.border, borderRadius: 12,
-    paddingHorizontal: 16, fontSize: 16, color: COLORS.textPrimary, backgroundColor: "#FFFFFF",
+  brand: { ...TYPE.h1, fontSize: 34, color: C.text },
+  tagline: { ...TYPE.body, marginTop: 8, textAlign: "center" },
+
+  card: { backgroundColor: C.surface, borderRadius: RADIUS.xl, padding: 22, borderWidth: 1, borderColor: C.border, ...(SHADOW.md as any) },
+  label: { ...TYPE.label, marginBottom: 8 },
+  inputWrap: {
+    flexDirection: "row", alignItems: "center", gap: 10,
+    height: 52, borderWidth: 1.5, borderColor: C.borderStrong, borderRadius: RADIUS.md,
+    paddingHorizontal: 14, backgroundColor: "#FFFFFF",
   },
-  btnPrimary: {
-    height: 56, backgroundColor: COLORS.primary, borderRadius: 14,
-    alignItems: "center", justifyContent: "center", marginTop: 24,
+  input: { flex: 1, fontSize: 16, color: C.text },
+  cta: {
+    flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8,
+    height: 56, borderRadius: RADIUS.md, marginTop: 22, overflow: "hidden",
+    ...(SHADOW.md as any),
   },
-  btnPrimaryText: { color: "#FFFFFF", fontSize: 17, fontWeight: "700" },
-  divider: { flexDirection: "row", alignItems: "center", marginVertical: 24, gap: 12 },
-  dividerLine: { flex: 1, height: 1, backgroundColor: COLORS.border },
-  dividerText: { fontSize: 11, fontWeight: "700", color: COLORS.textSecondary, letterSpacing: 1.5 },
+  ctaText: { color: "#FFFFFF", fontSize: 16, fontWeight: "700", letterSpacing: 0.2 },
+
+  demoSection: { marginTop: 24 },
+  divider: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 14 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: C.border },
+  dividerText: { fontSize: 10, fontWeight: "800", color: C.textMuted, letterSpacing: 1.6 },
   demoRow: { flexDirection: "row", gap: 8 },
-  demoChip: {
-    flex: 1, height: 44, borderRadius: 10, borderWidth: 1.5,
-    borderColor: COLORS.border, alignItems: "center", justifyContent: "center",
+  chip: {
+    flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6,
+    height: 48, borderRadius: RADIUS.md, borderWidth: 1.5, borderColor: C.borderStrong, backgroundColor: C.surface,
   },
-  demoChipText: { fontSize: 14, fontWeight: "600", color: COLORS.textPrimary },
-  demoHint: { fontSize: 12, color: COLORS.textSecondary, textAlign: "center", marginTop: 12 },
+  chipAccent: { backgroundColor: C.accent, borderColor: C.accent },
+  chipText: { fontSize: 13, fontWeight: "700", color: C.text },
+  demoHint: { fontSize: 12, color: C.textMuted, textAlign: "center", marginTop: 12 },
 });

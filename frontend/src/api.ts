@@ -1,26 +1,25 @@
-// SafeCount shared API client and design tokens
+// SafeCount shared API client. Design tokens moved to theme.ts
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { C, statusColor as sc, statusLabel as sl } from "./theme";
 
 export const API_BASE = process.env.EXPO_PUBLIC_BACKEND_URL + "/api";
 
+// Re-export for back-compat with existing screens
 export const COLORS = {
-  bg: "#FFFFFF",
-  surface: "#F8FAFC",
-  textPrimary: "#0F172A",
-  textSecondary: "#475569",
-  border: "#E2E8F0",
-  // Status
-  safe: "#16A34A",
-  needsHelp: "#DC2626",
-  pending: "#EA580C",
-  notAtLocation: "#2563EB",
-  inactive: "#9CA3AF",
-  // Emergency
-  emergencyBg: "#DC2626",
-  emergencyHighlight: "#FEF2F2",
-  warning: "#EA580C",
-  // Primary
-  primary: "#0F172A",
+  bg: C.bg,
+  surface: C.surface,
+  textPrimary: C.text,
+  textSecondary: C.textSub,
+  border: C.border,
+  safe: C.safe,
+  needsHelp: C.needs,
+  pending: C.pending,
+  notAtLocation: C.away,
+  inactive: C.inactive,
+  emergencyBg: C.needs,
+  emergencyHighlight: C.needsSoft,
+  warning: C.pending,
+  primary: C.text,
 };
 
 export async function apiCall(
@@ -39,14 +38,8 @@ export async function apiCall(
   });
   const text = await res.text();
   let data: any = null;
-  try {
-    data = text ? JSON.parse(text) : null;
-  } catch {
-    data = text;
-  }
-  if (!res.ok) {
-    throw new Error(data?.detail || `HTTP ${res.status}`);
-  }
+  try { data = text ? JSON.parse(text) : null; } catch { data = text; }
+  if (!res.ok) throw new Error(data?.detail || `HTTP ${res.status}`);
   return data;
 }
 
@@ -54,7 +47,6 @@ export async function saveAuth(token: string, user: any) {
   await AsyncStorage.setItem("token", token);
   await AsyncStorage.setItem("user", JSON.stringify(user));
 }
-
 export async function loadAuth() {
   const [token, userStr] = await Promise.all([
     AsyncStorage.getItem("token"),
@@ -62,43 +54,12 @@ export async function loadAuth() {
   ]);
   return { token, user: userStr ? JSON.parse(userStr) : null };
 }
-
 export async function clearAuth() {
   await AsyncStorage.multiRemove(["token", "user"]);
 }
 
-export function statusColor(status: string): string {
-  switch (status) {
-    case "safe":
-    case "manually_marked_safe":
-      return COLORS.safe;
-    case "needs_help":
-      return COLORS.needsHelp;
-    case "not_at_location":
-      return COLORS.notAtLocation;
-    case "not_responded":
-      return COLORS.pending;
-    default:
-      return COLORS.inactive;
-  }
-}
-
-export function statusLabel(status: string): string {
-  switch (status) {
-    case "safe":
-      return "Safe";
-    case "manually_marked_safe":
-      return "Marked safe";
-    case "needs_help":
-      return "Needs help";
-    case "not_at_location":
-      return "Not at location";
-    case "not_responded":
-      return "Not confirmed safe";
-    default:
-      return status;
-  }
-}
+export const statusColor = sc;
+export const statusLabel = sl;
 
 export function formatRel(iso: string | null): string {
   if (!iso) return "—";
