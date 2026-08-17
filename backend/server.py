@@ -950,12 +950,21 @@ async def _mongo_ping() -> tuple[bool, str | None]:
         return False, str(e)
 
 
+def _mongo_connection_info() -> dict[str, str | None]:
+    """Safe summary of MONGO_URL for deploy diagnostics (no password)."""
+    match = re.match(r"mongodb\+srv://([^:/]+)(?::[^@]+)?@([^/?]+)", MONGO_URL)
+    if not match:
+        return {"mongo_user": None, "mongo_host": None}
+    return {"mongo_user": match.group(1), "mongo_host": match.group(2)}
+
+
 @api.get("/health/db")
 async def health_db():
     ok, err = await _mongo_ping()
+    info = {"database": DB_NAME, **_mongo_connection_info()}
     if ok:
-        return {"ok": True, "database": DB_NAME}
-    return {"ok": False, "database": DB_NAME, "error": err}
+        return {"ok": True, **info}
+    return {"ok": False, **info, "error": err}
 
 
 @api.get("/auth/config")
