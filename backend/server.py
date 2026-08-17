@@ -30,8 +30,11 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger("safecount")
 
 # ---------- Config ----------
-# Railway may inject its own MONGO_URL — prefer our explicit variable when set.
-MONGO_URL = os.environ.get("RESQLIFE_MONGO_URL") or os.environ["MONGO_URL"]
+# Railway may inject its own MONGO_URL — on Railway, use RESQLIFE_MONGO_URL only.
+if os.environ.get("RAILWAY_ENVIRONMENT") or os.environ.get("RAILWAY_PROJECT_ID"):
+    MONGO_URL = os.environ["RESQLIFE_MONGO_URL"]
+else:
+    MONGO_URL = os.environ.get("RESQLIFE_MONGO_URL") or os.environ["MONGO_URL"]
 DB_NAME = os.environ["DB_NAME"]
 JWT_SECRET = os.environ.get("JWT_SECRET", "safecount-dev-secret-change-in-production-please")
 JWT_ALG = "HS256"
