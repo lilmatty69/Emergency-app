@@ -50,14 +50,17 @@ def _on_railway() -> bool:
     )
 
 
-# Railway may inject its own MONGO_URL — prefer our explicit variable.
+# Prefer RESQLIFE_MONGO_URL so Railway's injected MONGO_URL cannot override it.
 MONGO_URL = _env("RESQLIFE_MONGO_URL") or _env("MONGO_URL") or ""
-if _on_railway() and not _env("RESQLIFE_MONGO_URL"):
-    raise RuntimeError(
-        "RESQLIFE_MONGO_URL is missing at runtime. Add it in Railway Variables."
-    )
 if not MONGO_URL:
     raise RuntimeError("MONGO_URL / RESQLIFE_MONGO_URL is not set")
+CODE_VERSION = "2026-08-17-b"
+logger.info(
+    "boot v=%s mongo_source=%s mongo_keys=%s",
+    CODE_VERSION,
+    "RESQLIFE_MONGO_URL" if _env("RESQLIFE_MONGO_URL") else "MONGO_URL",
+    [k for k in os.environ if "MONGO" in k.upper()],
+)
 DB_NAME = os.environ["DB_NAME"]
 JWT_SECRET = os.environ.get("JWT_SECRET", "safecount-dev-secret-change-in-production-please")
 JWT_ALG = "HS256"
@@ -966,7 +969,7 @@ async def change_password_legacy(req: ChangePasswordReq, user=Depends(get_curren
 
 @api.get("/health")
 async def health():
-    return {"ok": True}
+    return {"ok": True, "v": CODE_VERSION}
 
 
 async def _mongo_ping() -> tuple[bool, str | None]:
