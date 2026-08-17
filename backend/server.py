@@ -30,11 +30,34 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger("safecount")
 
 # ---------- Config ----------
-# Railway may inject its own MONGO_URL — on Railway, use RESQLIFE_MONGO_URL only.
-if os.environ.get("RAILWAY_ENVIRONMENT") or os.environ.get("RAILWAY_PROJECT_ID"):
-    MONGO_URL = os.environ["RESQLIFE_MONGO_URL"]
-else:
-    MONGO_URL = os.environ.get("RESQLIFE_MONGO_URL") or os.environ["MONGO_URL"]
+def _env(name: str, default: str | None = None) -> str | None:
+    value = os.environ.get(name, default)
+    if value is None:
+        return None
+    return value.strip().strip('"').strip("'")
+
+
+def _on_railway() -> bool:
+    return any(
+        os.environ.get(key)
+        for key in (
+            "RAILWAY_ENVIRONMENT_NAME",
+            "RAILWAY_ENVIRONMENT",
+            "RAILWAY_PROJECT_ID",
+            "RAILWAY_SERVICE_ID",
+            "RAILWAY_PUBLIC_DOMAIN",
+        )
+    )
+
+
+# Railway may inject its own MONGO_URL — prefer our explicit variable.
+MONGO_URL = _env("RESQLIFE_MONGO_URL") or _env("MONGO_URL") or ""
+if _on_railway() and not _env("RESQLIFE_MONGO_URL"):
+    raise RuntimeError(
+        "RESQLIFE_MONGO_URL is missing at runtime. Add it in Railway Variables."
+    )
+if not MONGO_URL:
+    raise RuntimeError("MONGO_URL / RESQLIFE_MONGO_URL is not set")
 DB_NAME = os.environ["DB_NAME"]
 JWT_SECRET = os.environ.get("JWT_SECRET", "safecount-dev-secret-change-in-production-please")
 JWT_ALG = "HS256"
@@ -954,13 +977,18 @@ async def _mongo_ping() -> tuple[bool, str | None]:
         return False, str(e)
 
 
-def _mongo_connection_info() -> dict[str, str | None]:
+def _mongo_connection_info() -> dict[str, str | bool | None]:
     """Safe summary of MONGO_URL for deploy diagnostics (no password)."""
     match = re.match(r"mongodb\+srv://([^:/]+)(?::[^@]+)?@([^/?]+)", MONGO_URL)
-    if not match:
-        return {"mongo_user": None, "mongo_host": None, "mongo_source": "unknown"}
-    source = "RESQLIFE_MONGO_URL" if os.environ.get("RESQLIFE_MONGO_URL") else "MONGO_URL"
-    return {"mongo_user": match.group(1), "mongo_host": match.group(2), "mongo_source": source}
+    source = "RESQLIFE_MONGO_URL" if _env("RESQLIFE_MONGO_URL") else "MONGO_URL"
+    return {
+        "mongo_user": match.group(1) if match else None,
+        "mongo_host": match.group(2) if match else None,
+        "mongo_source": source,
+        "has_resqlife_mongo_url": bool(_env("RESQLIFE_MONGO_URL")),
+        "on_railway": _on_railway(),
+        "railway_service": _env("RAILWAY_SERVICE_NAME"),
+    }
 
 
 @api.get("/health/db")
