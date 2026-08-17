@@ -24,7 +24,8 @@ ROOT_DIR = Path(__file__).parent
 AVATAR_DIR = ROOT_DIR / "uploads" / "avatars"
 AVATAR_DIR.mkdir(parents=True, exist_ok=True)
 MAX_AVATAR_BYTES = 400_000
-load_dotenv(ROOT_DIR / ".env")
+if not os.environ.get("RAILWAY_ENVIRONMENT_NAME"):
+    load_dotenv(ROOT_DIR / ".env")
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("safecount")
@@ -54,7 +55,7 @@ def _on_railway() -> bool:
 MONGO_URL = _env("RESQLIFE_MONGO_URL") or _env("MONGO_URL") or ""
 if not MONGO_URL:
     raise RuntimeError("MONGO_URL / RESQLIFE_MONGO_URL is not set")
-CODE_VERSION = "2026-08-17-b"
+CODE_VERSION = "2026-08-17-c"
 logger.info(
     "boot v=%s mongo_source=%s mongo_keys=%s",
     CODE_VERSION,

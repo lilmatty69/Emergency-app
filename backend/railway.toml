@@ -6,3 +6,4 @@ dockerfilePath = "Dockerfile"
 healthcheckPath = "/api/health"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
+startCommand = "sh -c 'echo START_HAS_RESQLIFE=${RESQLIFE_MONGO_URL:+yes}; exec uvicorn server:app --host 0.0.0.0 --port ${PORT:-8080}'"
