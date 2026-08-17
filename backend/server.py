@@ -30,7 +30,8 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger("safecount")
 
 # ---------- Config ----------
-MONGO_URL = os.environ["MONGO_URL"]
+# Railway may inject its own MONGO_URL — prefer our explicit variable when set.
+MONGO_URL = os.environ.get("RESQLIFE_MONGO_URL") or os.environ["MONGO_URL"]
 DB_NAME = os.environ["DB_NAME"]
 JWT_SECRET = os.environ.get("JWT_SECRET", "safecount-dev-secret-change-in-production-please")
 JWT_ALG = "HS256"
@@ -954,8 +955,9 @@ def _mongo_connection_info() -> dict[str, str | None]:
     """Safe summary of MONGO_URL for deploy diagnostics (no password)."""
     match = re.match(r"mongodb\+srv://([^:/]+)(?::[^@]+)?@([^/?]+)", MONGO_URL)
     if not match:
-        return {"mongo_user": None, "mongo_host": None}
-    return {"mongo_user": match.group(1), "mongo_host": match.group(2)}
+        return {"mongo_user": None, "mongo_host": None, "mongo_source": "unknown"}
+    source = "RESQLIFE_MONGO_URL" if os.environ.get("RESQLIFE_MONGO_URL") else "MONGO_URL"
+    return {"mongo_user": match.group(1), "mongo_host": match.group(2), "mongo_source": source}
 
 
 @api.get("/health/db")
