@@ -55,7 +55,7 @@ def _on_railway() -> bool:
 MONGO_URL = _env("RESQLIFE_MONGO_URL") or _env("MONGO_URL") or ""
 if not MONGO_URL:
     raise RuntimeError("MONGO_URL / RESQLIFE_MONGO_URL is not set")
-CODE_VERSION = "2026-08-17-c"
+CODE_VERSION = "2026-08-17-d"
 logger.info(
     "boot v=%s mongo_source=%s mongo_keys=%s",
     CODE_VERSION,
@@ -992,6 +992,12 @@ def _mongo_connection_info() -> dict[str, str | bool | None]:
         "has_resqlife_mongo_url": bool(_env("RESQLIFE_MONGO_URL")),
         "on_railway": _on_railway(),
         "railway_service": _env("RAILWAY_SERVICE_NAME"),
+        "boot_id": _env("BOOT_ID"),
+        "env_keys": sorted(
+            k
+            for k in os.environ
+            if any(part in k.upper() for part in ("MONGO", "BOOT", "SUPABASE", "JWT", "DB_"))
+        ),
     }
 
 
