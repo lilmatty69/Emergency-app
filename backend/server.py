@@ -942,13 +942,34 @@ async def health():
     return {"ok": True}
 
 
+async def _mongo_ping() -> tuple[bool, str | None]:
+    try:
+        await asyncio.wait_for(db.command("ping"), timeout=8)
+        return True, None
+    except Exception as e:
+        return False, str(e)
+
+
+@api.get("/health/db")
+async def health_db():
+    ok, err = await _mongo_ping()
+    if ok:
+        return {"ok": True, "database": DB_NAME}
+    return {"ok": False, "database": DB_NAME, "error": err}
+
+
 @api.get("/auth/config")
 async def auth_config():
+    teams_registered = 0
+    try:
+        teams_registered = await db.teams.count_documents({})
+    except Exception as e:
+        logger.error("auth/config: MongoDB query failed: %s", e)
     return {
         "supabase_url": SUPABASE_URL or None,
         "supabase_enabled": supabase_auth_enabled(),
         "demo_mode": DEMO_MODE and not supabase_auth_enabled(),
-        "teams_registered": await db.teams.count_documents({}),
+        "teams_registered": teams_registered,
     }
 
 
@@ -2442,10 +2463,9 @@ async def seed():
 
 async def _background_startup() -> None:
     """Seed/demo setup runs after the server is already accepting /api/health."""
-    try:
-        await asyncio.wait_for(db.command("ping"), timeout=8)
-    except Exception as e:
-        logger.error("MongoDB not reachable at startup: %s", e)
+    ok, err = await _mongo_ping()
+    if not ok:
+        logger.error("MongoDB not reachable at startup: %s", err)
         return
     try:
         await db.users.create_index("email", unique=True)
