@@ -2440,9 +2440,8 @@ async def seed():
     logger.info("Seed: created demo school with 20 members.")
 
 
-@app.on_event("startup")
-async def on_startup():
-    """Don't block serving /api/health — Railway fails deploy if startup hangs on Mongo."""
+async def _background_startup() -> None:
+    """Seed/demo setup runs after the server is already accepting /api/health."""
     try:
         await asyncio.wait_for(db.command("ping"), timeout=8)
     except Exception as e:
@@ -2462,6 +2461,12 @@ async def on_startup():
         await ensure_supabase_demo_users()
     except Exception as e:
         logger.error("Startup seed skipped: %s", e)
+
+
+@app.on_event("startup")
+async def on_startup():
+    logger.info("RESQLIFE API starting (health available immediately)")
+    asyncio.create_task(_background_startup())
 
 
 @app.on_event("shutdown")
